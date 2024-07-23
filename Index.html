@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FPA抽奖小助手</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            background-color: #f7f7f7;
+        }
+
+        #container {
+            margin: 20px auto;
+            width: 80%;
+        }
+
+        input, button {
+            padding: 10px;
+            margin: 10px;
+            font-size: 16px;
+        }
+
+        #wheel-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin: 20px auto;
+        }
+
+        #wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 10px solid #333;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .segment {
+            width: 50%;
+            height: 50%;
+            background: #f00;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform-origin: 0 0;
+        }
+
+        #pointer {
+            width: 0; 
+            height: 0; 
+            border-left: 30px solid transparent;
+            border-right: 30px solid transparent;
+            border-bottom: 50px solid #333;
+            margin: 20px auto;
+        }
+
+        .label-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transform-origin: center center;
+        }
+
+        .label {
+            position: absolute;
+            transform-origin: 0 50%;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        .label span {
+            display: inline-block;
+            padding: 5px;
+            background: #fff;
+            border: 1px solid #333;
+            border-radius: 3px;
+        }
+
+        @keyframes fireworks {
+            0% { transform: scale(0); opacity: 1; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+
+        .firework {
+            width: 10px;
+            height: 10px;
+            background: gold;
+            position: absolute;
+            border-radius: 50%;
+            animation: fireworks 1s forwards;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h1>FPA抽奖小助手</h1>
+        <input type="text" id="participantInput" placeholder="输入参与抽奖的人员姓名 (用逗号分隔)">
+        <input type="text" id="sponsorInput" placeholder="输入赞助人姓名">
+        <input type="text" id="giftNameInput" placeholder="输入礼物名称">
+        <button onclick="startLottery()">开始抽奖</button>
+        
+        <div id="pointer"></div>
+        <div id="wheel-container">
+            <div id="wheel"></div>
+            <div id="labels"></div>
+        </div>
+        <div id="fireworks"></div>
+    </div>
+
+    <script>
+        let participants = [];
+        let sponsor = '';
+        let gifts = [];
+
+        function startLottery() {
+            let participantInput = document.getElementById('participantInput').value.split(',');
+            sponsor = document.getElementById('sponsorInput').value.trim();
+            let giftName = document.getElementById('giftNameInput').value.trim();
+
+            if (!participantInput || !sponsor || !giftName) {
+                alert("请填写所有信息！");
+                return;
+            }
+
+            participants = participantInput.filter(name => name.trim() !== sponsor);
+            gifts.push(giftName);
+
+            drawWheel();
+            rotateWheel();
+        }
+
+        function drawWheel() {
+            const wheel = document.getElementById('wheel');
+            wheel.innerHTML = '';
+            const segmentAngle = 360 / participants.length;
+            participants.forEach((participant, index) => {
+                const segment = document.createElement('div');
+                segment.classList.add('segment');
+                segment.style.background = getRandomColor();
+                segment.style.transform = `rotate(${segmentAngle * index}deg) skewY(${90 - segmentAngle}deg)`;
+                wheel.appendChild(segment);
+            });
+            drawLabels(segmentAngle);
+        }
+
+        function drawLabels(segmentAngle) {
+            const labels = document.getElementById('labels');
+            labels.innerHTML = '';
+            participants.forEach((participant, index) => {
+                const labelContainer = document.createElement('div');
+                labelContainer.classList.add('label-container');
+                labelContainer.style.transform = `rotate(${segmentAngle * index}deg)`;
+
+                const label = document.createElement('div');
+                label.classList.add('label');
+                label.style.transform = `rotate(${segmentAngle / 2}deg) translateX(160px)`;
+                label.innerHTML = `<span>${participant}</span>`;
+                
+                labelContainer.appendChild(label);
+                labels.appendChild(labelContainer);
+            });
+        }
+
+        function rotateWheel() {
+            const wheel = document.getElementById('wheel');
+            const randomAngle = Math.floor(Math.random() * 360) + 1440;
+            wheel.style.transition = 'transform 4s ease-out';
+            wheel.style.transform = `rotate(${randomAngle}deg)`;
+
+            setTimeout(() => {
+                const selectedIndex = Math.floor((randomAngle % 360) / (360 / participants.length));
+                const winner = participants[selectedIndex];
+                const giftName = gifts[0];
+                alert(`恭喜 ${winner} 获得 ${giftName}！`);
+                showFireworks();
+            }, 4000);
+        }
+
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
+        function showFireworks() {
+            const fireworksContainer = document.getElementById('fireworks');
+            fireworksContainer.innerHTML = '';
+            for (let i = 0; i < 20; i++) {
+                const firework = document.createElement('div');
+                firework.classList.add('firework');
+                firework.style.left = `${Math.random() * 100}%`;
+                firework.style.top = `${Math.random() * 100}%`;
+                fireworksContainer.appendChild(firework);
+            }
+        }
+    </script>
+</body>
+</html>
